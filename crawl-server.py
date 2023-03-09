@@ -30,7 +30,7 @@ def search_places(place_name):
         # 네이버 검색 API 호출
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
-        # convertResponse = BeautifulSoup(response.json()['items'],"lxml").te
+        
         # 검색 결과 중 필요한 정보만 추출하여 반환
         result = []
         for item in response.json()['items']:
@@ -40,7 +40,10 @@ def search_places(place_name):
                 'title': title,
                 'category': item['category'],
                 'address': item['address'],
-                'telephone': item['telephone']
+                'telephone': item['telephone'],
+                'mapX': item['mapx'],
+                'mapY': item['mapy']
+                
             })
 
         return jsonify({'result': result}), 200
