@@ -39,26 +39,42 @@ def search_map(place_name):
         # 검색 결과 페이지로 이동하고 로딩 기다리기
         # 로드가 완료될 때까지 기다림 (10초)
         driver.get(url)
-        first_item = driver.find_element(By.XPATH, '//*[@id="ct"]/div[2]/ul/li[1]/div[1]/a/div/em')
+        first_item = driver.find_element(By.XPATH, '//*[@id="ct"]/div[2]/ul/li[1]/div[1]/a/div')
         first_item.click()
 
         wait = WebDriverWait(driver, 2)
+        # 현재 url이 변경될때까지 대기 최대 2초
         wait.until(EC.url_changes(driver.current_url))
         url = driver.current_url
         
-        print(url)
-        response = requests.get(url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-
-        star_rating_element = soup.select_one('span.PXMot.LXIwF em')
+        # 변경된 url을 통해 html 파싱
+        placePage = requests.get(url)
+        place_page_soup = BeautifulSoup(placePage.text, 'html.parser')
+        # 평균 별점
+        star_rating_element = place_page_soup.select_one('span.PXMot.LXIwF em')
         star_rating = star_rating_element.text if star_rating_element else None
-
-        review_url = url.replace('/home', '/review/visitor')
-        driver.get(review_url)
+        # 총 리뷰 수
+        review_count_element = place_page_soup.select_one('a.place_bluelink em')
+        review_count = review_count_element.text if review_count_element else None
         
-
-        # 결과 반환
-        result = {'place_name': place_name, 'star_rating': star_rating}
+        # 위에서 나온 url을 통해서 리뷰 url로 변경
+        review_url = url.replace('/home', '/review/visitor')
+        review_page = requests.get(review_url)
+        review_page.encoding = 'utf-8' # 인코딩 설정
+        review_page_soup = BeautifulSoup(review_page.text, 'html.parser')
+        selected_reviews = review_page_soup.select('li.YeINN')
+    
+        reviews = []
+        for review in selected_reviews:
+            writer_element = review.select_one('div.sBWyy')
+            writer = writer_element.text.strip() if writer_element else None
+            
+            description_element = review.select_one('span.zPfVt')
+            description = description_element.text.strip() if description_element else None
+            
+            reviews.append({'writer': writer, 'description': description})
+        
+        result = {'star_rating': star_rating,'review_count': review_count,'reviews': reviews, }
         return jsonify(result)
     
     except TimeoutException as e:
