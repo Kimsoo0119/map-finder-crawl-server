@@ -42,7 +42,7 @@ def search_map(place_name):
         first_item = driver.find_element(By.XPATH, '//*[@id="ct"]/div[2]/ul/li[1]/div[1]/a/div')
         first_item.click()
 
-        wait = WebDriverWait(driver, 2)
+        wait = WebDriverWait(driver, 5)
         # 현재 url이 변경될때까지 대기 최대 2초
         wait.until(EC.url_changes(driver.current_url))
         url = driver.current_url
@@ -66,15 +66,17 @@ def search_map(place_name):
     
         reviews = []
         for review in selected_reviews:
-            writer_element = review.select_one('div.sBWyy')
-            writer = writer_element.text.strip() if writer_element else None
+            # writer_element = review.select_one('div.sBWyy')
+            # writer = writer_element.text.strip() if writer_element else None
             
             description_element = review.select_one('span.zPfVt')
             description = description_element.text.strip() if description_element else None
             
-            reviews.append({'writer': writer, 'description': description})
+            # reviews.append({'writer': writer, 'description': description})
+            reviews.append({'description': description})
         
-        result = {'star_rating': star_rating,'review_count': review_count,'reviews': reviews, }
+        result = {'naverStars': star_rating,'naverReviewerCounts': review_count,'reviews': reviews, }
+        
         return jsonify(result)
     
     except TimeoutException as e:
